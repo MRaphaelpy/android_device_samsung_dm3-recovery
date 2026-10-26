@@ -1,0 +1,65 @@
+name: Build OrangeFox
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    env:
+      FOX_DIR: ${{ github.workspace }}/fox_12.1
+    steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev python-is-python3 cpio
+          mkdir -p ~/bin
+          curl -s https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Sync OrangeFox 12.1
+        run: |
+          git clone --depth=1 https://gitlab.com/OrangeFox/sync.git ~/OrangeFox_sync
+          cd ~/OrangeFox_sync
+          ./orangefox_sync.sh --branch 12.1 --path "$FOX_DIR"
+
+      - name: Checkout device tree
+        uses: actions/checkout@v4
+        with:
+          path: fox_12.1/device/samsung/dm3q
+
+      - name: Clone dependencies
+        run: git clone --depth=1 -b android-12.1 https://github.com/TeamWin/android_device_qcom_twrp-common "$FOX_DIR/device/qcom/twrp-common"
+
+      - name: Build
+        run: |
+          cd "$FOX_DIR"
+          set +e
+          . build/envsetup.sh
+          lunch twrp_dm3q-eng || exit 1
+          mka adbd recoveryimage || exit 1
+
+      - name: Upload recovery
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrangeFox-dm3q
+          path: |
+            fox_12.1/out/target/product/dm3q/OrangeFox*.img
+            fox_12.1/out/target/product/dm3q/OrangeFox*.zip
+            fox_12.1/out/target/product/dm3q/recovery.tar
+          if-no-files-found: error
