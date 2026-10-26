@@ -1,4 +1,4 @@
-# TWRP Device Tree for Samsung Galaxy S23 Ultra
+# OrangeFox Device Tree for Samsung Galaxy S23 Ultra (dm3q)
 
 ## For Decryption
 Download [DECRYPT_RW.img.tar](https://github.com/Archer3770/Release/releases/download/Release/USERDATA_AIO_SM-S918x_DECRYPT_RW.img.tar) 
@@ -13,15 +13,26 @@ Download [DECRYPT_RW.img.tar](https://github.com/Archer3770/Release/releases/dow
 # Kernel source 
 https://github.com/samsung-sm8550/kernel_samsung_sm8550/tree/twrp-12.1
 
-## Clone repo
-```bash 
-git clone -b android-12.1 https://github.com/Archer3770/twrp_device_samsung_dm3q device/samsung/dm3q
+## Sync OrangeFox 12.1
+```bash
+git clone https://gitlab.com/OrangeFox/sync.git ~/OrangeFox_sync/sync
+cd ~/OrangeFox_sync/sync
+./orangefox_sync.sh --branch 12.1 --path ~/fox_12.1
 ```
 
-## To build 
+## Clone repo
 ```bash
-export ALLOW_MISSING_DEPENDENCIES=true
+cd ~/fox_12.1
+git clone -b orangefox https://github.com/MRaphaelpy/android_device_samsung_dm3-recovery device/samsung/dm3q
+git clone -b android-12.1 https://github.com/TeamWin/android_device_qcom_twrp-common device/qcom/twrp-common
+```
+
+## To build
+```bash
+cd ~/fox_12.1
 . build/envsetup.sh
 lunch twrp_dm3q-eng
-mka recoveryimage
+mka adbd recoveryimage
 ```
+
+Output: `out/target/product/dm3q/OrangeFox-*-Unofficial-dm3q.img` / `.zip` and `recovery.tar` for Odin.
