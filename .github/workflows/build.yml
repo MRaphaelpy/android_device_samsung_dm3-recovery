@@ -44,7 +44,8 @@ jobs:
           path: fox_12.1/device/samsung/dm3q
 
       - name: Clone dependencies
-        run: git clone --depth=1 -b android-12.1 https://github.com/TeamWin/android_device_qcom_twrp-common "$FOX_DIR/device/qcom/twrp-common"
+        run: |
+          [ -d "$FOX_DIR/device/qcom/twrp-common" ] || git clone --depth=1 -b android-12.1 https://github.com/TeamWin/android_device_qcom_twrp-common "$FOX_DIR/device/qcom/twrp-common"
 
       - name: Build
         run: |
